@@ -1,32 +1,49 @@
 #include "mbed.h"
 #include "MAG3110.h"
+#include "main.h"
 
-int main(void);
 Serial pc(USBTX, USBRX, 115200);
 DigitalOut led1(LED1);
-volatile int val1;
-volatile int val2;
-volatile int val3;
+MAG3110 mag(D14, D15);
+Timer timer;
+int data;
 
 int main() {
-    MAG3110 mag(D14, D15);
-    wait_ms(100);
     mag.enable();
-    wait_ms(100);
-    pc.printf("%i", mag.whoAmI());
-    wait_ms(100);
-    while(true){
-        led1 = !led1;
-        val1 = mag.whoAmI();
-        wait_ms(100);
-        val2 = mag.dataReady();
-        wait_ms(100);
-        val3 = mag.getMagAxis(MAG3110_X_AXIS);
-        wait_ms(100);
+    int revs = 0;
+    int rpm = 0;
+    int drev = 0;
+    bool lock = false;
+    timer.start();
+    int begin = timer.read_us();
 
-        pc.printf("val1: %i, ",val1);
-        pc.printf("val2: %i, ",val2);
-        pc.printf("val3: %i \r\n",val3);
+    while (true){
+
+        led1 = !led1;
+        data = mag.getMagAxis(MAG3110_X_AXIS);
+        
+        if (data > 1000) {
+            if (lock == false) {
+                revs++;
+                drev++;
+                lock = true;
+            }
+        } 
+        else 
+        {
+            lock = false;
+        }
+
+        if (drev == 10 )
+        {
+            rpm = (timer.read_us() - begin) * .000006;
+            drev = 0;
+            timer.reset();
+            begin = 0;
+            pc.printf("rpm: %8i, ",rpm);
+            pc.printf("revs: %8i\r",revs);
+        }
+
     }
 
 }

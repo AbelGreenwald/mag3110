@@ -109,10 +109,8 @@ class MAG3110
   void disable(void);
   uint32_t whoAmI(void);
   uint32_t dataReady(void);
-  //Public methods
   int16_t getMagAxis(uint8_t addr);
  private:
- //Private variables
   I2C m_i2c;
   char m_addr;
   void readRegs(int addr, uint8_t * data, int len);
